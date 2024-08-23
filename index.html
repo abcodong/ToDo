@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>해야할일 목록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #content {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>해야할일 목록</h1>
+    <input type="text" id="inputText" placeholder="내용을 입력하세요">
+    <button id="saveButton">저장</button>
+
+    <div id="content"></div>
+
+    <script type="module">
+        // Firebase 초기화
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAM9mvMvKkRNBh2it7fetmnIh4VXxnpQI",
+            authDomain: "todo-2e2bf.firebaseapp.com",
+            projectId: "todo-2e2bf",
+            storageBucket: "todo-2e2bf.appspot.com",
+            messagingSenderId: "294428286250",
+            appId: "1:294428286250:web:92f90488b7fb053dadd253",
+            measurementId: "G-LYMVP8GS5H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Firestore에 저장된 데이터를 불러와 화면에 표시하는 함수
+        async function loadContent() {
+            const querySnapshot = await getDocs(collection(db, "tasks"));
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = ''; // 이전 내용을 초기화
+            querySnapshot.forEach((doc) => {
+                const newEntry = document.createElement('div');
+                newEntry.className = 'entry';
+                newEntry.textContent = doc.data().text;
+                contentDiv.appendChild(newEntry);
+            });
+        }
+
+        // Firestore에 데이터를 저장하는 함수
+        async function saveContent() {
+            const input = document.getElementById('inputText').value;
+            const contentDiv = document.getElementById('content');
+
+            if(input) {
+                try {
+                    await addDoc(collection(db, "tasks"), {
+                        text: input
+                    });
+
+                    // 저장된 데이터 화면에 추가
+                    const newEntry = document.createElement('div');
+                    newEntry.className = 'entry';
+                    newEntry.textContent = input;
+
+                    contentDiv.appendChild(newEntry);
+
+                    // 입력 필드 초기화
+                    document.getElementById('inputText').value = '';
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                }
+            }
+        }
+
+        // 저장 버튼에 클릭 이벤트 연결
+        document.getElementById('saveButton').onclick = saveContent;
+
+        // 페이지가 로드될 때 Firestore에서 데이터를 불러옴
+        window.onload = loadContent;
+    </script>
+</body>
+</html>
